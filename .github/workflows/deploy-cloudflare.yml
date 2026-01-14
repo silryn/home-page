@@ -30,10 +30,21 @@ jobs:
       - name: Build
         run: bun run build
 
+      - name: Ensure Pages project exists
+        run: |
+          echo "Attempting to create Cloudflare Pages project..."
+          bunx wrangler pages project create silryn-homepage --production-branch=main || echo "Project might already exist, continuing..."
+
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_PAGES_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_PAGES_ACCOUNT }}
+
       - name: Deploy to Cloudflare Pages
-        uses: cloudflare/wrangler-action@v3
-        with:
-          apiToken: ${{ secrets.CLOUDFLARE_PAGES_TOKEN }}
-          accountId: ${{ secrets.CLOUDFLARE_PAGES_ACCOUNT }}
-          command: pages deploy dist --project-name="silryn-homepage"
-          gitHubToken: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          echo "Deploying to Cloudflare Pages..."
+          bunx wrangler pages deploy dist --project-name="silryn-homepage" --commit-dirty=true
+
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_PAGES_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_PAGES_ACCOUNT }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
