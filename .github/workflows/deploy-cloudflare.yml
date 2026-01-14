@@ -13,6 +13,11 @@ jobs:
       contents: read
       deployments: write
 
+    env:
+      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_PAGES_TOKEN }}
+      CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_PAGES_ACCOUNT }}
+      CLOUDFLARE_PAGES_NAME: ${{ secrets.CLOUDFLARE_PAGES_NAME }} # <- 这里放你的项目名
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -30,21 +35,20 @@ jobs:
       - name: Build
         run: bun run build
 
-      - name: Ensure Pages project exists
+      - name: Deploy or create project if missing
         run: |
-          echo "Attempting to create Cloudflare Pages project..."
-          bunx wrangler pages project create silryn-homepage --production-branch=main || echo "Project might already exist, continuing..."
+          echo "Attempting to deploy to Cloudflare Pages..."
+          set +e
+          bunx wrangler pages deploy dist --project-name="$CLOUDFLARE_PAGES_NAME"
+          DEPLOY_STATUS=$?
+          set -e
 
-        env:
-          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_PAGES_TOKEN }}
-          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_PAGES_ACCOUNT }}
-
-      - name: Deploy to Cloudflare Pages
-        run: |
-          echo "Deploying to Cloudflare Pages..."
-          bunx wrangler pages deploy dist --project-name="silryn-homepage" --commit-dirty=true
-
-        env:
-          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_PAGES_TOKEN }}
-          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_PAGES_ACCOUNT }}
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          if [ $DEPLOY_STATUS -ne 0 ]; then
+            echo "Deployment failed, attempting to create project and redeploy..."
+            # 创建项目
+            bunx wrangler pages project create "$CLOUDFLARE_PAGES_NAME" --production-branch=main || echo "Project creation may already exist."
+            # 重新部署
+            bunx wrangler pages deploy dist --project-name="$CLOUDFLARE_PAGES_NAME"
+          else
+            echo "Deployment succeeded, skipping project creation."
+          fi
