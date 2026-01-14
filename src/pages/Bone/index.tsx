@@ -1,7 +1,7 @@
 import React from "react";
 import { Layout, Menu } from "antd";
 import { BrowserRouter as Router, Routes, Route, Link } from "react-router-dom";
-import { HomeOutlined, UserOutlined } from "@ant-design/icons";
+import { HomeOutlined, UserOutlined, ReadOutlined } from "@ant-design/icons";
 import styles from "./index.module.less";
 import { Anim } from "../Anim";
 import HomePage from "../Home";
@@ -21,11 +21,25 @@ const App: React.FC = () =>
               mode="horizontal"
               defaultSelectedKeys={["home"]}
               className={styles.menu}
+              disabledOverflow
               items={[
                 {
                   key: "home",
                   icon: <HomeOutlined />,
                   label: <Link to="/">Home</Link>,
+                },
+                {
+                  key: "blog",
+                  icon: <ReadOutlined />,
+                  label: (
+                    <a
+                      href="https://blog.silryn.com/"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                    >
+                      Blog
+                    </a>
+                  ),
                 },
                 {
                   key: "about",
