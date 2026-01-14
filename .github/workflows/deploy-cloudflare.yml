@@ -45,9 +45,9 @@ jobs:
 
           if [ $DEPLOY_STATUS -ne 0 ]; then
             echo "Deployment failed, attempting to create project and redeploy..."
-            # 创建项目
+            # Create Project
             bunx wrangler pages project create "$CLOUDFLARE_PAGES_NAME" --production-branch=main || echo "Project creation may already exist."
-            # 重新部署
+            # Deploy Again
             bunx wrangler pages deploy dist --project-name="$CLOUDFLARE_PAGES_NAME"
           else
             echo "Deployment succeeded, skipping project creation."
